@@ -84,7 +84,10 @@ async def process_cognition(req: CognitiveRequest):
     start_time = time.time()
     try:
         response = llm.create_chat_completion(
-            messages=messages, temperature=req.temperature, max_tokens=256
+            messages=messages,
+            temperature=req.temperature,
+            max_tokens=256,
+            response_format={"type": "json_object"},
         )
     except Exception as e:
         logger.error(f"LLM Error: {e}")
@@ -109,6 +112,6 @@ async def process_cognition(req: CognitiveRequest):
     logger.info(
         f"Time: {generation_time:.2f}s | Speed: {tps:.2f} tps | Tokens: {total_tokens}"
     )
-    logger.info(f"Thought: {action_thought}")
+    logger.info(f"Thought JSON: {action_thought}")
 
     return {"npc_name": req.npc_name, "action_thought": action_thought}
