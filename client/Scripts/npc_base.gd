@@ -17,7 +17,9 @@ var state_timer: float = 5.0
 var is_thinking: bool = false
 
 func _ready() -> void:
+	randomize()
 	$Sprite2D.modulate = body_color
+	thought_label.visible = false
 	cognitive_api.request_completed.connect(_on_cognitive_api_request_completed)
 	stimulate_cognition("Simulation started. What will you do?")
 

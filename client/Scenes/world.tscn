@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="PackedScene" path="res://Scenes/npc_base.tscn" id="1_npc"]
+[ext_resource type="PackedScene" path="res://Scenes/player.tscn" id="2_player"]
 
 [sub_resource type="TileSet" id="TileSet_grid16"]
 tile_size = Vector2i(16, 16)
@@ -35,7 +36,7 @@ shape = SubResource("RectangleShape2D_vert")
 position = Vector2(640, 180)
 shape = SubResource("RectangleShape2D_vert")
 
-[node name="MainCamera" type="Camera2D" parent="."]
+[node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(320, 180)
 
 [node name="Subject_01" parent="." instance=ExtResource("1_npc")]
