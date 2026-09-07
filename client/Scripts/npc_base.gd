@@ -5,11 +5,10 @@ enum State { IDLE, WANDER, APPROACH }
 @export var speed: float = 64.0
 @export var npc_name: String = "Subject_01"
 @export var body_color: Color = Color(0.2, 0.8, 0.4, 1.0)
-@export var system_prompt: String = "You are a simulated human. Return a JSON with 'thought' and 'action' (IDLE, WANDER, or APPROACH_name). Example: {\"thought\": \"I see Player.\", \"action\": \"APPROACH_Player\"}"
+@export var system_prompt: String = "You are a simulated human. Return a FLAT JSON with 'thought' and 'action' (IDLE, WANDER, or APPROACH_Player). DO NOT nest objects."
 @export var cognition_url: String = "http://127.0.0.1:8000/process_cognition"
 
 @onready var cognitive_api: HTTPRequest = $CognitiveAPI
-@onready var thought_label: Label = $ThoughtBubble
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var vision_area: Area2D = $VisionArea
 
@@ -24,7 +23,6 @@ func _ready() -> void:
 	add_to_group("Entity")
 	randomize()
 	sprite.modulate = body_color
-	thought_label.visible = false
 	cognitive_api.request_completed.connect(_on_cognitive_api_request_completed)
 	stimulate_cognition("Simulation started. What will you do?")
 
@@ -42,7 +40,7 @@ func _physics_process(delta: float) -> void:
 				target_direction = (target_entity.global_position - global_position).normalized()
 				velocity = target_direction * speed
 				animate_walk()
-				if global_position.distance_to(target_entity.global_position) < 25.0:
+				if global_position.distance_to(target_entity.global_position) < 30.0:
 					velocity = Vector2.ZERO
 					sprite.scale = Vector2(1, 1)
 			else:
@@ -103,10 +101,17 @@ func _on_cognitive_api_request_completed(_result: int, response_code: int, _head
 				var llm_json := JSON.new()
 				if llm_json.parse(raw_llm_json) == OK:
 					var decision = llm_json.data
-					if decision.has("thought"):
-						thought_label.text = str(decision["thought"])
 					if decision.has("action"):
-						apply_action(str(decision["action"]).to_upper())
+						var act_str = str(decision["action"]).to_upper()
+						if "APPROACH" in act_str:
+							if "PLAYER" in act_str: apply_action("APPROACH_Player")
+							elif "SUBJECT_01" in act_str: apply_action("APPROACH_Subject_01")
+							elif "SUBJECT_02" in act_str: apply_action("APPROACH_Subject_02")
+							else: apply_action("WANDER")
+						elif "WANDER" in act_str:
+							apply_action("WANDER")
+						else:
+							apply_action("IDLE")
 	
 	is_thinking = false
 	state_timer = randf_range(3.0, 6.0)

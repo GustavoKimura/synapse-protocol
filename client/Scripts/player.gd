@@ -19,3 +19,13 @@ func _physics_process(delta: float) -> void:
 		sprite.scale = Vector2(squash, stretch)
 	else:
 		sprite.scale = Vector2(1, 1)
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_select"):
+		print("[SISTEMA DE VOZ] Microfone ABERTO. Gravando...")
+		$UI/VoicePrompt.modulate = Color(1, 0.2, 0.2)
+		$UI/VoicePrompt.text = "Gravando Voz... (Fale agora)"
+	elif event.is_action_released("ui_select"):
+		print("[SISTEMA DE VOZ] Microfone FECHADO. Preparando envio para Whisper...")
+		$UI/VoicePrompt.modulate = Color(1, 1, 1)
+		$UI/VoicePrompt.text = "Pressione [ESPACO] para Falar"
