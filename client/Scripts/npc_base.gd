@@ -19,9 +19,16 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 
 func stimulate_cognition(stimulus: String) -> void:
+	var current_world_state := {
+		"time_of_day": "Morning",
+		"weather": "Clear",
+		"location": "Spawn_Room"
+	}
+	
 	var payload := {
 		"npc_name": npc_name,
 		"system_prompt": system_prompt,
+		"world_state": current_world_state,
 		"stimulus": stimulus,
 		"temperature": 0.7
 	}

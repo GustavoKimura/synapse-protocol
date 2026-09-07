@@ -2,6 +2,7 @@ import logging
 import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Dict, List, Any
 from llama_cpp import Llama
 
 logging.basicConfig(
@@ -13,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-logger.info("Initializing Llama-cpp engine with Vulkan acceleration...")
 try:
     llm = Llama(
         model_path="backend/dolphin-2.9-llama3-8b-q4_K_M.gguf",
@@ -33,20 +33,26 @@ except Exception as e:
 class CognitiveRequest(BaseModel):
     npc_name: str
     system_prompt: str
+    world_state: Dict[str, Any]
     stimulus: str
     temperature: float
 
 
+npc_memory: Dict[str, List[Dict[str, str]]] = {}
+
+
 @app.post("/process_cognition")
 async def process_cognition(req: CognitiveRequest):
-    logger.info(f"--- New Cognition Request for NPC: {req.npc_name} ---")
-    logger.info(f"Stimulus: {req.stimulus}")
-    logger.info(f"Temperature: {req.temperature}")
+    logger.info(f"--- Cognition Request: {req.npc_name} ---")
 
-    messages = [
-        {"role": "system", "content": req.system_prompt},
-        {"role": "user", "content": req.stimulus},
-    ]
+    if req.npc_name not in npc_memory:
+        npc_memory[req.npc_name] = []
+
+    world_context = f"[WORLD STATE OMNISCIENT DATA]\n{req.world_state}\n\n[IMMEDIATE SENSORY INPUT]\n{req.stimulus}"
+
+    messages = [{"role": "system", "content": req.system_prompt}]
+    messages.extend(npc_memory[req.npc_name][-10:])
+    messages.append({"role": "user", "content": world_context})
 
     start_time = time.time()
     try:
@@ -54,22 +60,23 @@ async def process_cognition(req: CognitiveRequest):
             messages=messages, temperature=req.temperature, max_tokens=256
         )
     except Exception as e:
-        logger.error(f"Error during LLM generation: {e}")
+        logger.error(f"LLM Error: {e}")
         raise HTTPException(status_code=500, detail="Internal LLM Error")
 
-    end_time = time.time()
-    generation_time = end_time - start_time
-
+    generation_time = time.time() - start_time
     action_thought = response["choices"][0]["message"]["content"]
+
+    npc_memory[req.npc_name].append({"role": "user", "content": req.stimulus})
+    npc_memory[req.npc_name].append({"role": "assistant", "content": action_thought})
+
     usage = response.get("usage", {})
     completion_tokens = usage.get("completion_tokens", 0)
     total_tokens = usage.get("total_tokens", 0)
     tps = completion_tokens / generation_time if generation_time > 0 else 0
 
-    logger.info(f"Generation completed in {generation_time:.2f} seconds.")
-    logger.info(f"Tokens - Completion: {completion_tokens} | Total: {total_tokens}")
-    logger.info(f"Speed: {tps:.2f} tokens/sec")
-    logger.info(f"Resulting Thought: {action_thought}")
-    logger.info("---------------------------------------------------")
+    logger.info(
+        f"Time: {generation_time:.2f}s | Speed: {tps:.2f} tps | Tokens: {total_tokens}"
+    )
+    logger.info(f"Thought: {action_thought}")
 
     return {"npc_name": req.npc_name, "action_thought": action_thought}
