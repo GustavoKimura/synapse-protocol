@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://Scripts/npc_base.gd" id="1_script"]
 
@@ -7,6 +7,9 @@ size = Vector2(16, 16)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_collider"]
 radius = 6.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vision"]
+radius = 150.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bubble"]
 content_margin_left = 4.0
@@ -28,6 +31,11 @@ texture = SubResource("PlaceholderTexture2D_sprite")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_collider")
+
+[node name="VisionArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea"]
+shape = SubResource("CircleShape2D_vision")
 
 [node name="CognitiveAPI" type="HTTPRequest" parent="."]
 
