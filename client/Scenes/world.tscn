@@ -1,14 +1,27 @@
-[gd_scene format=3 uid="uid://cyeuva8pjxiyo"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="PackedScene" path="res://Scenes/npc_base.tscn" id="1_a02cp"]
+[ext_resource type="PackedScene" path="res://Scenes/npc_base.tscn" id="1_npc"]
 
 [sub_resource type="TileSet" id="TileSet_grid16"]
+tile_size = Vector2i(16, 16)
 
-[node name="World" type="Node2D" unique_id=1714365935]
+[node name="World" type="Node2D"]
 
-[node name="GridMap" type="TileMap" parent="." unique_id=1224898271]
+[node name="GridMap" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_grid16")
 format = 2
 
-[node name="NPCBase" parent="." unique_id=1327974995 instance=ExtResource("1_a02cp")]
-position = Vector2(330, 170)
+[node name="MainCamera" type="Camera2D" parent="."]
+position = Vector2(320, 180)
+
+[node name="Subject_01" parent="." instance=ExtResource("1_npc")]
+position = Vector2(360, 180)
+npc_name = "Subject_01"
+body_color = Color(0.2, 0.8, 0.4, 1)
+system_prompt = "You are an energetic and curious simulated human. You MUST respond ONLY with a valid JSON object matching this schema: {\"thought\": \"your monologue in one short sentence\", \"action\": \"IDLE\" or \"WANDER\"}."
+
+[node name="Subject_02" parent="." instance=ExtResource("1_npc")]
+position = Vector2(280, 180)
+npc_name = "Subject_02"
+body_color = Color(0.8, 0.2, 0.2, 1)
+system_prompt = "You are a highly paranoid and lazy simulated human. You MUST respond ONLY with a valid JSON object matching this schema: {\"thought\": \"your monologue in one short sentence\", \"action\": \"IDLE\" or \"WANDER\"}."

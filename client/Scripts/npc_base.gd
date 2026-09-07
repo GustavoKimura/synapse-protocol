@@ -4,11 +4,12 @@ enum State { IDLE, WANDER }
 
 @export var speed: float = 64.0
 @export var npc_name: String = "Subject_01"
+@export var body_color: Color = Color(0.2, 0.8, 0.4, 1.0)
 @export var system_prompt: String = "You are a simulated human. You MUST respond ONLY with a valid JSON object matching this schema: {\"thought\": \"your internal monologue in one sentence\", \"action\": \"IDLE\" or \"WANDER\"}."
 @export var cognition_url: String = "http://127.0.0.1:8000/process_cognition"
 
 @onready var cognitive_api: HTTPRequest = $CognitiveAPI
-@onready var thought_label: Label = $UI/Panel/ThoughtLabel
+@onready var thought_label: Label = $ThoughtBubble
 
 var current_state: State = State.IDLE
 var current_thought: String = ""
@@ -17,6 +18,7 @@ var state_timer: float = 5.0
 var is_thinking: bool = false
 
 func _ready() -> void:
+	$Sprite2D.modulate = body_color
 	cognitive_api.request_completed.connect(_on_cognitive_api_request_completed)
 	stimulate_cognition("Simulation started. What will you do?")
 
@@ -65,10 +67,10 @@ func _on_cognitive_api_request_completed(_result: int, response_code: int, _head
 				if llm_json.parse(raw_llm_json) == OK:
 					var decision = llm_json.data
 					if decision.has("thought"):
-						current_thought = decision["thought"]
-						thought_label.text = "[" + npc_name + "] " + current_thought
+						current_thought = str(decision["thought"])
+						thought_label.text = current_thought
 					if decision.has("action"):
-						apply_action(decision["action"])
+						apply_action(str(decision["action"]))
 	
 	is_thinking = false
 	state_timer = randf_range(3.0, 6.0)
