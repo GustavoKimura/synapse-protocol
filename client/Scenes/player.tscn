@@ -5,10 +5,11 @@
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_sprite"]
 size = Vector2(16, 16)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_collider"]
-size = Vector2(16, 16)
+[sub_resource type="CircleShape2D" id="CircleShape2D_collider"]
+radius = 6.0
 
 [node name="Player" type="CharacterBody2D"]
+motion_mode = 1
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -16,7 +17,7 @@ modulate = Color(0.2, 0.4, 0.9, 1)
 texture = SubResource("PlaceholderTexture2D_sprite")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_collider")
+shape = SubResource("CircleShape2D_collider")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 limit_left = 0

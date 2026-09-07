@@ -5,8 +5,8 @@
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_sprite"]
 size = Vector2(16, 16)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_collider"]
-size = Vector2(16, 16)
+[sub_resource type="CircleShape2D" id="CircleShape2D_collider"]
+radius = 6.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bubble"]
 content_margin_left = 4.0
@@ -20,13 +20,14 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
 [node name="NPCBase" type="CharacterBody2D"]
+motion_mode = 1
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = SubResource("PlaceholderTexture2D_sprite")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_collider")
+shape = SubResource("CircleShape2D_collider")
 
 [node name="CognitiveAPI" type="HTTPRequest" parent="."]
 
