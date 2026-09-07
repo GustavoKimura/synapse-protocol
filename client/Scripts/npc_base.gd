@@ -8,6 +8,7 @@ enum State { IDLE, WANDER }
 @export var cognition_url: String = "http://127.0.0.1:8000/process_cognition"
 
 @onready var cognitive_api: HTTPRequest = $CognitiveAPI
+@onready var thought_label: Label = $UI/Panel/ThoughtLabel
 
 var current_state: State = State.IDLE
 var current_thought: String = ""
@@ -65,7 +66,7 @@ func _on_cognitive_api_request_completed(_result: int, response_code: int, _head
 					var decision = llm_json.data
 					if decision.has("thought"):
 						current_thought = decision["thought"]
-						print("[", npc_name, "] ", current_thought)
+						thought_label.text = "[" + npc_name + "] " + current_thought
 					if decision.has("action"):
 						apply_action(decision["action"])
 	
@@ -73,7 +74,6 @@ func _on_cognitive_api_request_completed(_result: int, response_code: int, _head
 	state_timer = randf_range(3.0, 6.0)
 
 func apply_action(action: String) -> void:
-	print("[", npc_name, "] Changing state to: ", action)
 	if action == "WANDER":
 		current_state = State.WANDER
 		var dirs = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
