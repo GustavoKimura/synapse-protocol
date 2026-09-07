@@ -1,9 +1,12 @@
 import logging
 import time
+from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List, Any
+from typing import Dict, Any
 from llama_cpp import Llama
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 logging.basicConfig(
     level=logging.INFO,
@@ -11,6 +14,24 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+engine = create_engine(
+    "sqlite:///backend/synapse.db", connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+
+class Memory(Base):
+    __tablename__ = "npc_memories"
+    id = Column(Integer, primary_key=True, index=True)
+    npc_name = Column(String, index=True)
+    role = Column(String)
+    content = Column(String)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -38,20 +59,26 @@ class CognitiveRequest(BaseModel):
     temperature: float
 
 
-npc_memory: Dict[str, List[Dict[str, str]]] = {}
-
-
 @app.post("/process_cognition")
 async def process_cognition(req: CognitiveRequest):
     logger.info(f"--- Cognition Request: {req.npc_name} ---")
 
-    if req.npc_name not in npc_memory:
-        npc_memory[req.npc_name] = []
+    db = SessionLocal()
 
     world_context = f"[WORLD STATE OMNISCIENT DATA]\n{req.world_state}\n\n[IMMEDIATE SENSORY INPUT]\n{req.stimulus}"
 
     messages = [{"role": "system", "content": req.system_prompt}]
-    messages.extend(npc_memory[req.npc_name][-10:])
+
+    history = (
+        db.query(Memory)
+        .filter(Memory.npc_name == req.npc_name)
+        .order_by(Memory.timestamp.asc())
+        .limit(10)
+        .all()
+    )
+    for mem in history:
+        messages.append({"role": mem.role, "content": mem.content})
+
     messages.append({"role": "user", "content": world_context})
 
     start_time = time.time()
@@ -61,13 +88,18 @@ async def process_cognition(req: CognitiveRequest):
         )
     except Exception as e:
         logger.error(f"LLM Error: {e}")
+        db.close()
         raise HTTPException(status_code=500, detail="Internal LLM Error")
 
     generation_time = time.time() - start_time
     action_thought = response["choices"][0]["message"]["content"]
 
-    npc_memory[req.npc_name].append({"role": "user", "content": req.stimulus})
-    npc_memory[req.npc_name].append({"role": "assistant", "content": action_thought})
+    user_mem = Memory(npc_name=req.npc_name, role="user", content=req.stimulus)
+    asst_mem = Memory(npc_name=req.npc_name, role="assistant", content=action_thought)
+    db.add(user_mem)
+    db.add(asst_mem)
+    db.commit()
+    db.close()
 
     usage = response.get("usage", {})
     completion_tokens = usage.get("completion_tokens", 0)
