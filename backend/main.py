@@ -1,12 +1,14 @@
 import logging
 import time
+import os
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import Dict, Any
 from llama_cpp import Llama
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
+from faster_whisper import WhisperModel
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +38,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 try:
+    logger.info("Inicializando Llama-cpp (GPU/Vulkan)...")
     llm = Llama(
         model_path="backend/dolphin-2.9-llama3-8b-q4_K_M.gguf",
         chat_format="chatml",
@@ -45,9 +48,13 @@ try:
         n_ctx=8192,
         verbose=False,
     )
-    logger.info("Model loaded successfully.")
+    logger.info("LLM carregado com sucesso.")
+
+    logger.info("Inicializando Faster-Whisper (CPU)...")
+    whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
+    logger.info("Whisper carregado com sucesso.")
 except Exception as e:
-    logger.error(f"Failed to load model: {e}")
+    logger.error(f"Falha ao carregar modelos de IA: {e}")
     raise e
 
 
@@ -59,14 +66,30 @@ class CognitiveRequest(BaseModel):
     temperature: float
 
 
+@app.post("/transcribe_voice")
+async def transcribe_voice(file: UploadFile = File(...)):
+    try:
+        temp_path = f"backend/temp_{file.filename}"
+        with open(temp_path, "wb") as f:
+            f.write(await file.read())
+
+        segments, _ = whisper_model.transcribe(temp_path, beam_size=5, language="pt")
+        text = "".join([segment.text for segment in segments]).strip()
+
+        os.remove(temp_path)
+        logger.info(f"[WHISPER TRANSCRICAO]: {text}")
+        return {"text": text}
+    except Exception as e:
+        logger.error(f"Erro de Transcricao: {e}")
+        raise HTTPException(status_code=500, detail="Erro no processamento de voz")
+
+
 @app.post("/process_cognition")
 async def process_cognition(req: CognitiveRequest):
-    logger.info(f"--- Cognition Request: {req.npc_name} ---")
-
+    logger.info(f"--- Requisicao de Cognicao: {req.npc_name} ---")
     db = SessionLocal()
 
-    world_context = f"[WORLD STATE OMNISCIENT DATA]\n{req.world_state}\n\n[IMMEDIATE SENSORY INPUT]\n{req.stimulus}"
-
+    world_context = f"[DADOS ONISCIENTES DO MUNDO]\n{req.world_state}\n\n[ESTIMULO SENSORIAL IMEDIATO]\n{req.stimulus}"
     messages = [{"role": "system", "content": req.system_prompt}]
 
     history = (
@@ -90,28 +113,17 @@ async def process_cognition(req: CognitiveRequest):
             response_format={"type": "json_object"},
         )
     except Exception as e:
-        logger.error(f"LLM Error: {e}")
+        logger.error(f"Erro no LLM: {e}")
         db.close()
-        raise HTTPException(status_code=500, detail="Internal LLM Error")
+        raise HTTPException(status_code=500, detail="Erro interno do LLM")
 
     generation_time = time.time() - start_time
     action_thought = response["choices"][0]["message"]["content"]
 
-    user_mem = Memory(npc_name=req.npc_name, role="user", content=req.stimulus)
-    asst_mem = Memory(npc_name=req.npc_name, role="assistant", content=action_thought)
-    db.add(user_mem)
-    db.add(asst_mem)
+    db.add(Memory(npc_name=req.npc_name, role="user", content=req.stimulus))
+    db.add(Memory(npc_name=req.npc_name, role="assistant", content=action_thought))
     db.commit()
     db.close()
 
-    usage = response.get("usage", {})
-    completion_tokens = usage.get("completion_tokens", 0)
-    total_tokens = usage.get("total_tokens", 0)
-    tps = completion_tokens / generation_time if generation_time > 0 else 0
-
-    logger.info(
-        f"Time: {generation_time:.2f}s | Speed: {tps:.2f} tps | Tokens: {total_tokens}"
-    )
-    logger.info(f"Thought JSON: {action_thought}")
-
+    logger.info(f"Tempo: {generation_time:.2f}s | Pensamento: {action_thought}")
     return {"npc_name": req.npc_name, "action_thought": action_thought}

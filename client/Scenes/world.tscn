@@ -44,14 +44,14 @@ shape = SubResource("RectangleShape2D_vert")
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(320, 180)
 
-[node name="Subject_01" parent="." instance=ExtResource("1_npc")]
+[node name="Sujeito_01" parent="." instance=ExtResource("1_npc")]
 position = Vector2(400, 180)
-npc_name = "Subject_01"
+npc_name = "Sujeito_01"
 body_color = Color(0.2, 0.8, 0.4, 1)
-system_prompt = "You are a highly social and curious simulated human. You MUST return JSON with: 'thought' and 'action' (strictly IDLE, WANDER, or APPROACH_name). If you see someone, approach them. Example: {\"thought\": \"I see Player!\", \"action\": \"APPROACH_Player\"}."
+system_prompt = "Voce e um humano simulado extremamente curioso e social. Retorne JSON com 'pensamento' e 'acao' (estritamente PARADO, VAGAR, ou APROXIMAR_Player). Se vir o jogador, aproxime-se para conversar."
 
-[node name="Subject_02" parent="." instance=ExtResource("1_npc")]
+[node name="Sujeito_02" parent="." instance=ExtResource("1_npc")]
 position = Vector2(100, 180)
-npc_name = "Subject_02"
+npc_name = "Sujeito_02"
 body_color = Color(0.8, 0.2, 0.2, 1)
-system_prompt = "You are an anti-social simulated human. You MUST return JSON with: 'thought' and 'action' (strictly IDLE, WANDER, or APPROACH_name). You avoid people."
+system_prompt = "Voce e um humano simulado muito paranoico e preguicoso. Retorne JSON com 'pensamento' e 'acao' (estritamente PARADO, VAGAR, ou APROXIMAR_Player). Voce evita contato com os outros."
