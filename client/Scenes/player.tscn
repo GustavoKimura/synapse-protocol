@@ -19,4 +19,8 @@ texture = SubResource("PlaceholderTexture2D_sprite")
 shape = SubResource("RectangleShape2D_collider")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+limit_left = 0
+limit_top = 0
+limit_right = 640
+limit_bottom = 360
 position_smoothing_enabled = true

@@ -14,6 +14,11 @@ size = Vector2(20, 360)
 
 [node name="World" type="Node2D"]
 
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.12, 0.12, 0.12, 1)
+
 [node name="GridMap" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_grid16")
 format = 2
@@ -21,19 +26,19 @@ format = 2
 [node name="WorldBounds" type="StaticBody2D" parent="."]
 
 [node name="Top" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(320, 0)
+position = Vector2(320, -10)
 shape = SubResource("RectangleShape2D_horiz")
 
 [node name="Bottom" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(320, 360)
+position = Vector2(320, 370)
 shape = SubResource("RectangleShape2D_horiz")
 
 [node name="Left" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(0, 180)
+position = Vector2(-10, 180)
 shape = SubResource("RectangleShape2D_vert")
 
 [node name="Right" type="CollisionShape2D" parent="WorldBounds"]
-position = Vector2(640, 180)
+position = Vector2(650, 180)
 shape = SubResource("RectangleShape2D_vert")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]

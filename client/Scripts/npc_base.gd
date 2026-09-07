@@ -32,6 +32,10 @@ func _physics_process(delta: float) -> void:
 	
 	move_and_slide()
 	
+	if get_slide_collision_count() > 0 and current_state == State.WANDER:
+		current_state = State.IDLE
+		target_direction = Vector2.ZERO
+	
 	if not is_thinking:
 		state_timer -= delta
 		if state_timer <= 0.0:
