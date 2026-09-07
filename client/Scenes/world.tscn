@@ -1,15 +1,39 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://Scenes/npc_base.tscn" id="1_npc"]
 
 [sub_resource type="TileSet" id="TileSet_grid16"]
 tile_size = Vector2i(16, 16)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_horiz"]
+size = Vector2(640, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vert"]
+size = Vector2(20, 360)
+
 [node name="World" type="Node2D"]
 
 [node name="GridMap" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_grid16")
 format = 2
+
+[node name="WorldBounds" type="StaticBody2D" parent="."]
+
+[node name="Top" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(320, 0)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="Bottom" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(320, 360)
+shape = SubResource("RectangleShape2D_horiz")
+
+[node name="Left" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(0, 180)
+shape = SubResource("RectangleShape2D_vert")
+
+[node name="Right" type="CollisionShape2D" parent="WorldBounds"]
+position = Vector2(640, 180)
+shape = SubResource("RectangleShape2D_vert")
 
 [node name="MainCamera" type="Camera2D" parent="."]
 position = Vector2(320, 180)
@@ -18,10 +42,10 @@ position = Vector2(320, 180)
 position = Vector2(360, 180)
 npc_name = "Subject_01"
 body_color = Color(0.2, 0.8, 0.4, 1)
-system_prompt = "You are an energetic and curious simulated human. You MUST respond ONLY with a valid JSON object matching this schema: {\"thought\": \"your monologue in one short sentence\", \"action\": \"IDLE\" or \"WANDER\"}."
+system_prompt = "You are an energetic simulated human. You MUST return a JSON object with exactly two keys: 'thought' (string) and 'action' (string, strictly IDLE or WANDER). No other keys."
 
 [node name="Subject_02" parent="." instance=ExtResource("1_npc")]
 position = Vector2(280, 180)
 npc_name = "Subject_02"
 body_color = Color(0.8, 0.2, 0.2, 1)
-system_prompt = "You are a highly paranoid and lazy simulated human. You MUST respond ONLY with a valid JSON object matching this schema: {\"thought\": \"your monologue in one short sentence\", \"action\": \"IDLE\" or \"WANDER\"}."
+system_prompt = "You are a highly paranoid and lazy simulated human. You MUST return a JSON object with exactly two keys: 'thought' (string) and 'action' (string, strictly IDLE or WANDER). No other keys."

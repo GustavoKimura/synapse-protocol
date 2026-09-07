@@ -5,14 +5,13 @@ enum State { IDLE, WANDER }
 @export var speed: float = 64.0
 @export var npc_name: String = "Subject_01"
 @export var body_color: Color = Color(0.2, 0.8, 0.4, 1.0)
-@export var system_prompt: String = "You are a simulated human. You MUST respond ONLY with a valid JSON object matching this schema: {\"thought\": \"your internal monologue in one sentence\", \"action\": \"IDLE\" or \"WANDER\"}."
+@export var system_prompt: String = "You are a simulated human. You MUST return a JSON object with exactly two keys: 'thought' (string) and 'action' (string, strictly IDLE or WANDER). No other keys."
 @export var cognition_url: String = "http://127.0.0.1:8000/process_cognition"
 
 @onready var cognitive_api: HTTPRequest = $CognitiveAPI
 @onready var thought_label: Label = $ThoughtBubble
 
 var current_state: State = State.IDLE
-var current_thought: String = ""
 var target_direction: Vector2 = Vector2.ZERO
 var state_timer: float = 5.0
 var is_thinking: bool = false
@@ -67,10 +66,13 @@ func _on_cognitive_api_request_completed(_result: int, response_code: int, _head
 				if llm_json.parse(raw_llm_json) == OK:
 					var decision = llm_json.data
 					if decision.has("thought"):
-						current_thought = str(decision["thought"])
-						thought_label.text = current_thought
+						thought_label.text = str(decision["thought"])
 					if decision.has("action"):
-						apply_action(str(decision["action"]))
+						var act_str = str(decision["action"]).to_upper()
+						if "WANDER" in act_str:
+							apply_action("WANDER")
+						else:
+							apply_action("IDLE")
 	
 	is_thinking = false
 	state_timer = randf_range(3.0, 6.0)
@@ -78,7 +80,7 @@ func _on_cognitive_api_request_completed(_result: int, response_code: int, _head
 func apply_action(action: String) -> void:
 	if action == "WANDER":
 		current_state = State.WANDER
-		var dirs = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
+		var dirs = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT, Vector2(1,1), Vector2(-1,1), Vector2(1,-1), Vector2(-1,-1)]
 		target_direction = dirs[randi() % dirs.size()]
 	else:
 		current_state = State.IDLE
