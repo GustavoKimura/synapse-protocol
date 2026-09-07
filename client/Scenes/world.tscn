@@ -11,4 +11,4 @@ tile_set = SubResource("TileSet_grid16")
 format = 2
 
 [node name="NPCBase" parent="." unique_id=1327974995 instance=ExtResource("1_a02cp")]
-position = Vector2(293, 145)
+position = Vector2(396.495, 233)
